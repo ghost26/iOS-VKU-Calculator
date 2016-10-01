@@ -17,14 +17,18 @@ class CalculatorViewController: UIViewController {
     private var isUserTyping = false
     private var calculator = SimpleCalculator()
     
+    private var lastOperation: String!
+    
     @IBAction func touchDigit(_ sender: UIButton) {
         let currentDigit = sender.currentTitle!
         if resultLabel.text!.range(of: ",") != nil && currentDigit == "," {
             return
         }
         if isUserTyping {
-            resultLabel.text?.append(currentDigit)
-            resultLabel.text = formatResult(resultLabel.text!)
+            if resultLabel.text!.characters.count < 16 {
+                resultLabel.text?.append(currentDigit)
+                resultLabel.text = formatResult(resultLabel.text!)
+            }
         } else {
             if currentDigit == "," {
                 resultLabel.text = "0,"
@@ -47,22 +51,40 @@ class CalculatorViewController: UIViewController {
                     isUserTyping = false
                 }
             } else {
-                resultLabel.text = "0"
+                clearLabels()
                 calculator.reset()
             }
         } else {
             calculator.setOperand(operand: NSString(string: currentResult).doubleValue)
+            
+            // update label with last operation
+            if calculator.isNotUnaryOperation(op: currentOperation) {
+                let operands = calculator.getOperands()
+                if operands.0 != nil && operands.1 != nil {
+                    if calculator.isEqualsOperation(op: currentOperation) {
+                        lastOperationLabel.text = "\(stripZero(formatResult(String(operands.0!)))) \(lastOperation!) \(stripZero(formatResult(String(operands.1!))))"
+                    } else {
+                        lastOperationLabel.text = ""
+                    }
+                }
+            }
+            
             calculator.performOperation(symbol: currentOperation)
             isUserTyping = false
             if calculator.result != nil {
                 resultLabel.text = formatResult(String(describing: calculator.result!))
                 // pretty 0: 2,0 -> 2
-                resultLabel.text?.append("\n")
-                resultLabel.text = resultLabel.text!.replacingOccurrences(of: ",0\n", with: "")
+                resultLabel.text = stripZero(resultLabel.text!)
             } else {
                 resultLabel.text = "Error"
             }
+            
+            lastOperation = currentOperation
         }
+    }
+    
+    private func stripZero(_ numberRepresentation: String) -> String {
+        return (numberRepresentation + "\n").replacingOccurrences(of: ",0\n", with: "").replacingOccurrences(of: "\n", with: "")
     }
     
     private func formatResult(_ result: String) -> String {
@@ -76,11 +98,16 @@ class CalculatorViewController: UIViewController {
     func clearLabels() {
         resultLabel.text = "0"
         lastOperationLabel.text = ""
-        
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        resultLabel.minimumScaleFactor = 0.5
+        resultLabel.adjustsFontSizeToFitWidth = true
+        
+        lastOperationLabel.minimumScaleFactor = 0.5
+        lastOperationLabel.adjustsFontSizeToFitWidth = true
         
         clearLabels();
     }

@@ -10,7 +10,7 @@ import Foundation
 
 class SimpleCalculator {
     
-    private enum Operation {
+    enum Operation {
         case UnaryOperation((Double) -> Double)
         case BinaryOperation((Double, Double) -> Double)
         case Equals
@@ -60,6 +60,26 @@ class SimpleCalculator {
     
     func reset() {
         firstOperand = nil; secondOperand = nil; pendingOperation = nil
+    }
+    
+    func isNotUnaryOperation(op: String) -> Bool {
+        // ???
+        switch operations[op]! {
+        case .UnaryOperation: return false
+        default: return true
+        }
+    }
+    
+    // copy-paste
+    func isEqualsOperation(op: String) -> Bool {
+        switch operations[op]! {
+        case .Equals: return true
+        default: return false
+        }
+    }
+    
+    func getOperands() -> (Double?, Double?) {
+        return (firstOperand, secondOperand)
     }
     
     var result: Double? {
